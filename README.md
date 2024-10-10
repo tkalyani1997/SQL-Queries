@@ -1,8 +1,7 @@
-# SQL-Queries
-
-Troubleshooting SQL Server Query Performance:
+# Troubleshoot slow-running queries in SQL Server
 
 If your query is running slow, the first step is to check if it's **waiting** or **running**. 
+
 💡 **Tip:** If CPU time is less than 70-80% of the total duration, you're likely dealing with a waiting issue. Focus on reducing wait times to improve efficiency!
 
 👉 **Waiting Query (Low CPU Usage):**
