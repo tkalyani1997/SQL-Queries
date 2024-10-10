@@ -1,0 +1,39 @@
+### Query to Identify Waiting Queries (Queries not using CPU):
+
+```sql
+SELECT
+    r.session_id,
+    r.status,
+    r.wait_type,
+    r.wait_time,
+    r.wait_resource,
+    r.blocking_session_id,
+    r.cpu_time,
+    r.total_elapsed_time,
+    r.logical_reads,
+    r.reads,
+    r.writes,
+    s.text AS query_text
+FROM sys.dm_exec_requests AS r
+CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) AS s
+WHERE r.status = 'suspended'
+ORDER BY r.wait_time DESC;
+```
+
+### Query to Identify Running Queries (Queries using CPU):
+
+```sql
+SELECT
+    r.session_id,
+    r.status,
+    r.cpu_time,
+    r.total_elapsed_time,
+    r.logical_reads,
+    r.reads,
+    r.writes,
+    s.text AS query_text
+FROM sys.dm_exec_requests AS r
+CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) AS s
+WHERE r.status = 'running'
+ORDER BY r.cpu_time DESC;
+```
