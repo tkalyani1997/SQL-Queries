@@ -1,0 +1,181 @@
+### 🔍 **SQL Server Performance Monitoring Queries**
+
+1. **Check Active Sessions**  
+   ```sql
+   SELECT session_id, login_name, status FROM sys.dm_exec_sessions;
+   ```
+
+2. **Identify Blocking Sessions**  
+   ```sql
+   SELECT blocking_session_id, session_id, wait_type FROM sys.dm_exec_requests WHERE blocking_session_id <> 0;
+   ```
+
+3. **Monitor CPU Usage**  
+   ```sql
+   SELECT sqlserver_start_time, cpu_busy FROM sys.dm_os_sys_info;
+   ```
+
+4. **Review Long-Running Queries**  
+   ```sql
+   SELECT session_id, total_elapsed_time, TEXT 
+   FROM sys.dm_exec_requests 
+   CROSS APPLY sys.dm_exec_sql_text(sql_handle) 
+   WHERE total_elapsed_time > 10000;
+   ```
+
+5. **Check Disk I/O Statistics**  
+   ```sql
+   SELECT DB_NAME(database_id), file_id, num_of_reads, num_of_writes 
+   FROM sys.dm_io_virtual_file_stats(NULL, NULL);
+   ```
+
+6. **Detect Memory Pressure**  
+   ```sql
+   SELECT physical_memory_in_use_kb / 1024 AS MemoryUsedMB FROM sys.dm_os_process_memory;
+   ```
+
+7. **Find Query Execution Plan**  
+   ```sql
+   SELECT query_plan 
+   FROM sys.dm_exec_query_stats 
+   CROSS APPLY sys.dm_exec_query_plan(plan_handle);
+   ```
+
+8. **Check Index Fragmentation**  
+   ```sql
+   SELECT index_id, avg_fragmentation_in_percent 
+   FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED');
+   ```
+
+9. **Monitor SQL Server Resource Usage**  
+   ```sql
+   SELECT database_id, avg_cpu_percent, avg_data_io_percent FROM sys.dm_db_resource_stats;
+   ```
+
+10. **Review Deadlocks**  
+    ```sql
+    SELECT * FROM sys.dm_tran_locks WHERE request_status = 'WAIT';
+    ```
+
+11. **Monitor Query Performance**  
+    ```sql
+    SELECT TOP 10 total_worker_time, execution_count, text 
+    FROM sys.dm_exec_query_stats 
+    CROSS APPLY sys.dm_exec_sql_text(sql_handle) 
+    ORDER BY total_worker_time DESC;
+    ```
+
+12. **Check TempDB Usage**  
+    ```sql
+    SELECT session_id, user_objects_alloc_page_count, internal_objects_alloc_page_count 
+    FROM sys.dm_db_session_space_usage;
+    ```
+
+13. **Review Lock Waits**  
+    ```sql
+    SELECT resource_type, request_mode, wait_type 
+    FROM sys.dm_tran_locks WHERE request_status = 'WAIT';
+    ```
+
+14. **Check SQL Server Logs**  
+    ```sql
+    EXEC xp_readerrorlog;
+    ```
+
+15. **Identify Failed SQL Jobs**  
+    ```sql
+    SELECT job_id, name, last_run_outcome 
+    FROM msdb.dbo.sysjobs_view WHERE last_run_outcome = 0;
+    ```
+
+16. **Analyze Query Wait Stats**  
+    ```sql
+    SELECT wait_type, wait_time_ms, wait_resource 
+    FROM sys.dm_os_wait_stats WHERE wait_time_ms > 0;
+    ```
+
+17. **Check Available Free Space in Databases**  
+    ```sql
+    EXEC sp_MSforeachdb 'USE [?]; EXEC sp_spaceused;';
+    ```
+
+18. **Review Backup History**  
+    ```sql
+    SELECT database_name, backup_finish_date, backup_size 
+    FROM msdb.dbo.backupset 
+    WHERE database_name = 'YourDatabaseName';
+    ```
+
+19. **Check Query Execution Times**  
+    ```sql
+    SELECT creation_time, start_time, total_elapsed_time, text 
+    FROM sys.dm_exec_requests 
+    CROSS APPLY sys.dm_exec_sql_text(sql_handle);
+    ```
+
+20. **Check User Activity**  
+    ```sql
+    SELECT login_name, host_name, program_name, last_request_start_time, reads, writes 
+    FROM sys.dm_exec_sessions 
+    WHERE login_name IS NOT NULL;
+    ```
+
+21. **Queries Running Without Waiting for Logging**  
+    ```sql
+    SELECT query_plan  
+    FROM sys.dm_exec_query_stats 
+    CROSS APPLY sys.dm_exec_query_plan(plan_handle) 
+    WHERE total_elapsed_time > 10000;
+    ```
+
+22. **Top 10 Queries by CPU Time**  
+    ```sql
+    SELECT TOP 10 qs.execution_count, qs.total_worker_time AS CPUTime, st.text AS QueryText 
+    FROM sys.dm_exec_query_stats qs 
+    CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st 
+    ORDER BY qs.total_worker_time DESC;
+    ```
+
+23. **Top 10 Queries by Execution Plan**  
+    ```sql
+    SELECT TOP 10 q.text, p.query_plan 
+    FROM sys.dm_exec_query_stats qs 
+    CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) q 
+    CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) p 
+    ORDER BY qs.total_worker_time DESC;
+    ```
+
+24. **Index Fragmentation Check**  
+    ```sql
+    SELECT OBJECT_NAME(object_id) AS TableName, index_id, avg_fragmentation_in_percent 
+    FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') 
+    WHERE avg_fragmentation_in_percent > 30;
+    ```
+
+25. **Rebuild Fragmented Index**  
+    ```sql
+    ALTER INDEX [IndexName] ON [TableName] REBUILD;
+    ```
+
+26. **Check Active SQL Sessions and CPU Usage**  
+    ```sql
+    SELECT session_id, cpu_time, logical_reads, total_elapsed_time FROM sys.dm_exec_requests;
+    ```
+
+27. **Wait Statistics for Parallelism (CXPACKET)**  
+    ```sql
+    SELECT wait_type, waiting_tasks_count, wait_time_ms 
+    FROM sys.dm_os_wait_stats 
+    WHERE wait_type = 'CXPACKET';
+    ```
+
+28. **Identify Missing Indexes**  
+    ```sql
+    SHOW INDEXES FROM table_name;  -- or 
+    SELECT * FROM sys.dm_missing_index_details;
+    ```
+
+29. **Add Missing Indexes**  
+    ```sql
+    CREATE INDEX IDX_CustomerID ON Orders (CustomerID, OrderDate);
+    ```
